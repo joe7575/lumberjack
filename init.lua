@@ -22,28 +22,6 @@ local MY_PARAM1_VAL = 7  -- to identify placed nodes
 local lTrees = {} -- List od registered tree items
 
 --
--- Register the tree node to the lumberjack mod.
--- 'radius' the the range (+x/-x/+z/-z), where all available tree nodes will be removed-
--- 'stem_height_min' is the minimum number of tree nodes, to be a valid stem (and not the a root)-
---
-function lumberjack.register_tree(name, radius, stem_height_min)
-	local data = minetest.registered_nodes[name]
-	if data == nil then
-		error("[lumberjack] "..name.." is no valid item")
-	end
-	if data.after_dig_node == nil then
-		minetest.override_item(name, {
-				after_dig_node = after_dig_node, 
-				on_construct = on_construct,
-		})
-	else
-		error("[lumberjack] "..name.." has already an 'after_dig_node' function")
-	end
-	lTrees[name] = {radius=radius, height_min=stem_height_min}
-end
-
-
---
 -- Remove all treen nodes in the given range
 --
 local function remove_level(pos1, pos2, name)
@@ -110,6 +88,27 @@ local function on_construct(pos)
 	if node then
 		minetest.swap_node(pos, {name=node.name, param1=MY_PARAM1_VAL, param2=node.param2})		
 	end
+end
+
+--
+-- Register the tree node to the lumberjack mod.
+-- 'radius' the the range (+x/-x/+z/-z), where all available tree nodes will be removed-
+-- 'stem_height_min' is the minimum number of tree nodes, to be a valid stem (and not the a root)-
+--
+function lumberjack.register_tree(name, radius, stem_height_min)
+	local data = minetest.registered_nodes[name]
+	if data == nil then
+		error("[lumberjack] "..name.." is no valid item")
+	end
+	if data.after_dig_node == nil then
+		minetest.override_item(name, {
+				after_dig_node = after_dig_node, 
+				on_construct = on_construct,
+		})
+	else
+		error("[lumberjack] "..name.." has already an 'after_dig_node' function")
+	end
+	lTrees[name] = {radius=radius, height_min=stem_height_min}
 end
 
 
