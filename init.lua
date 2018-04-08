@@ -22,6 +22,43 @@ local MY_PARAM1_VAL = 7  -- to identify placed nodes
 local lTrees = {} -- List od registered tree items
 
 --
+-- Check of diggers tool is some kind of axe
+--
+local function chopper_tool(digger)
+	local tool = digger:get_wielded_item()
+	if tool then
+		local caps = tool:get_tool_capabilities()
+		return caps.groupcaps and caps.groupcaps.choppy
+	end 
+	return false
+end
+
+--
+-- tool wearing
+--
+local function add_wear(digger, node, num_nodes)
+	local tool = digger:get_wielded_item()
+	if tool then
+		local caps = tool:get_tool_capabilities()
+		if caps.groupcaps and caps.groupcaps.choppy then 
+			local maxlevel = caps.groupcaps.choppy.maxlevel or 1
+			local uses = caps.groupcaps.choppy.uses or 10
+			local choppy = lTrees[node.name].choppy or 1
+			local leveldiff = maxlevel - choppy
+			if leveldiff == 1 then
+				uses = uses * 3
+			elseif leveldiff == 2 then
+				uses = uses * 9
+			end
+			print("maxlevel", maxlevel, "uses", uses, "choppy", choppy)
+			tool:add_wear(65535 * num_nodes / uses)
+			print("add_wear", 65535 * num_nodes / uses)
+			digger:set_wielded_item(tool)
+		end
+	end 
+end
+
+--
 -- Remove all treen nodes in the given range
 --
 local function remove_level(pos1, pos2, name)
@@ -31,6 +68,18 @@ local function remove_level(pos1, pos2, name)
 		cnt = cnt + 1
 	end
 	return cnt
+end
+
+--
+-- Check for tree node on the next higher level
+--
+local function check_level(pos, name)
+	local pos1 = {x=pos.x-1, y=pos.y+1, z=pos.z-1}
+	local pos2 = {x=pos.x+1, y=pos.y+1, z=pos.z+1}
+	for _,pos in ipairs(minetest.find_nodes_in_area(pos1, pos2, name)) do
+		return true
+	end
+	return false
 end
 
 --
@@ -77,11 +126,14 @@ local function after_dig_node(pos, oldnode, oldmetadata, digger)
 	local radius = lTrees[oldnode.name].radius or 0
 	local num_nodes = remove_tree(pos, radius, oldnode.name)
 	add_to_inventory(digger, oldnode.name, num_nodes)
+	add_wear(digger, oldnode, num_nodes)
+	minetest.log("action", digger:get_player_name().." fells "..oldnode.name..
+					" ("..num_nodes.." items)".." at "..minetest.pos_to_string(pos))
 	minetest.sound_play("tree_falling", {pos = pos, max_hear_distance = 16})
 end	
 
 --
--- Mark node as "used placed"
+-- Mark node as "player placed"
 --
 local function on_construct(pos)
 	local node = minetest.get_node(pos)
@@ -89,6 +141,28 @@ local function on_construct(pos)
 		minetest.swap_node(pos, {name=node.name, param1=MY_PARAM1_VAL, param2=node.param2})		
 	end
 end
+
+local function can_dig(pos, digger)
+	if not digger then
+		return true
+	end
+	if minetest.is_protected(pos, digger:get_player_name()) then
+		return false
+	end
+	if minetest.check_player_privs(digger:get_player_name(), "lumberjack") and chopper_tool(digger) then
+		return true
+	end
+	local node = minetest.get_node(pos)
+	if not check_level(pos, node.name) then
+		return true
+	end
+	return false
+end
+
+minetest.register_privilege("lumberjack", 
+	{description = "Gives you the rights to fell a tree at once", 
+	give_to_singleplayer = true})
+
 
 --
 -- Register the tree node to the lumberjack mod.
@@ -100,17 +174,25 @@ function lumberjack.register_tree(name, radius, stem_height_min)
 	if data == nil then
 		error("[lumberjack] "..name.." is no valid item")
 	end
-	if data.after_dig_node == nil then
-		minetest.override_item(name, {
-				after_dig_node = after_dig_node, 
-				on_construct = on_construct,
-		})
-	else
+	if data.after_dig_node then
 		error("[lumberjack] "..name.." has already an 'after_dig_node' function")
 	end
-	lTrees[name] = {radius=radius, height_min=stem_height_min}
+	if data.on_construct then
+		error("[lumberjack] "..name.." has already an 'on_construct' function")
+	end
+	if data.can_dig then
+		error("[lumberjack] "..name.." has already a 'can_dig' function")
+	end
+	if not data.groups.choppy then
+		error("[lumberjack] "..name.." has no 'choppy' property")
+	end
+	minetest.override_item(name, {
+			after_dig_node = after_dig_node, 
+			on_construct = on_construct,
+			can_dig = can_dig,
+	})
+	lTrees[name] = {radius=radius, height_min=stem_height_min, choppy=data.groups.choppy}
 end
-
 
 lumberjack.register_tree("default:jungletree", 1, 5)
 lumberjack.register_tree("default:acacia_tree", 2, 3)
@@ -126,3 +208,17 @@ if minetest.get_modpath("ethereal") and ethereal ~= nil then
 	lumberjack.register_tree("ethereal:willow_trunk", 4, 3)
 	lumberjack.register_tree("ethereal:frost_tree", 1, 3)
 end
+
+
+--"moretrees:beech_trunk"
+--"moretrees:apple_tree_trunk"
+--"moretrees:oak_trunk"
+--"moretrees:sequoia_trunk"
+--"moretrees:birch_trunk"
+--"moretrees:palm_trunk"
+--"moretrees:spruce_trunk"
+--"moretrees:pine_trunk"
+--"moretrees:willow_trunk"
+--"moretrees:rubber_tree_trunk"
+--"moretrees:jungletree_trunk"
+--"moretrees:fir_trunk"
