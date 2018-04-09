@@ -20,6 +20,6 @@ Code: Licensed under the GNU LGPL version 2.1 or later. See LICENSE.txt and http
 Sound is taken from Hybrid Dog (TreeCapitator)
 
 # History
-V0.1 - 07/Apr/2018 - Mod initial created  
+v0.1 - 07/Apr/2018 - Mod initial created  
 v0.2 - 08/Apr/2018 - Priv 'lumberjack' added, digging of trees from the top only added, tool wearing added  
-v0.3 - 09/apr/2018 - Harvesting points for placing saplings and destroying tree blocks added to reach lumberjack privs  
+v0.3 - 09/Apr/2018 - Harvesting points for placing saplings and destroying tree blocks added to reach lumberjack privs  
