@@ -8,10 +8,14 @@
 	LGPLv2.1+
 	See LICENSE.txt for more information
 
-	This mod allows to hit the bottom of the tree and the whole tree is harvested
+	Mod to completely cut trees by destroying only one block.
+	This mod allows to destroy the bottom of the tree and the whole tree is felled
 	and moved to the players inventory.
-	To distinguish between "grown" trees and playes tree nodes, the 'node.param1'
-	is used to identify placed nodes.
+	
+	To distinguish between "grown" trees and placed tree nodes, the attribute 
+	'node.param1' is used to identify placed nodes.
+	
+	The number of necessary lumberjack points has to be configured via 'settingtypes.txt'
 	
 ]]--
 
@@ -19,10 +23,14 @@ lumberjack = {}
 
 local MY_PARAM1_VAL = 7  -- to identify placed nodes
 
-local lTrees = {} -- List od registered tree items
+-- Necessary number of points for dug trees and placed sapling to get lumberjack privs
+local LUMBERJACK_TREE_POINTS = tonumber(minetest.setting_get("lumberjack_points")) or 400
+local LUMBERJACK_SAPL_POINTS = LUMBERJACK_TREE_POINTS / 6
+
+local lTrees = {} -- List of registered tree items
 
 --
--- Check of diggers tool is some kind of axe
+-- Check if used tool is some kind of axe
 --
 local function chopper_tool(digger)
 	local tool = digger:get_wielded_item()
@@ -41,18 +49,17 @@ local function add_wear(digger, node, num_nodes)
 	if tool then
 		local caps = tool:get_tool_capabilities()
 		if caps.groupcaps and caps.groupcaps.choppy then 
-			local maxlevel = caps.groupcaps.choppy.maxlevel or 1
 			local uses = caps.groupcaps.choppy.uses or 10
-			local choppy = lTrees[node.name].choppy or 1
-			local leveldiff = maxlevel - choppy
-			if leveldiff == 1 then
-				uses = uses * 3
-			elseif leveldiff == 2 then
-				uses = uses * 9
-			end
-			print("maxlevel", maxlevel, "uses", uses, "choppy", choppy)
+--			local maxlevel = caps.groupcaps.choppy.maxlevel or 1
+--			local choppy = lTrees[node.name].choppy or 1
+--			local leveldiff = choppy - maxlevel
+--			if leveldiff == 1 then
+--				uses = uses * 3
+--			elseif leveldiff == 2 then
+--				uses = uses * 9
+--			end
+			uses = uses * 9
 			tool:add_wear(65535 * num_nodes / uses)
-			print("add_wear", 65535 * num_nodes / uses)
 			digger:set_wielded_item(tool)
 		end
 	end 
@@ -73,14 +80,57 @@ end
 --
 -- Check for tree node on the next higher level
 --
-local function check_level(pos, name)
+local function is_top_tree_node(pos, name)
 	local pos1 = {x=pos.x-1, y=pos.y+1, z=pos.z-1}
 	local pos2 = {x=pos.x+1, y=pos.y+1, z=pos.z+1}
 	for _,pos in ipairs(minetest.find_nodes_in_area(pos1, pos2, name)) do
-		return true
+		return false
+	end
+	return true
+end
+
+
+local function check_points(player)
+	local points = tonumber(player:get_attribute("lumberjack_tree_points") or LUMBERJACK_TREE_POINTS)
+	points = points	+ tonumber(player:get_attribute("lumberjack_sapl_points") or LUMBERJACK_SAPL_POINTS)
+	
+	if points > 0 then
+		return false
+	elseif points == 0 then
+		local privs = minetest.get_player_privs(player:get_player_name())
+		privs.lumberjack = true
+		minetest.set_player_privs(player:get_player_name(), privs)
+		player:set_attribute("lumberjack_tree_points", "-1")
+		player:set_attribute("lumberjack_sapl_points", "-1")
+		minetest.chat_send_player(player:get_player_name(), "You got lumberjack privs now")
+		minetest.log("action", player:get_player_name().." got lumberjack privs")
+	end
+	return true
+end
+
+--
+-- Maintain lumberjack points and grant lumberjack privs if level is reached
+--
+local function needed_points(digger)
+	local points = tonumber(digger:get_attribute("lumberjack_tree_points") or LUMBERJACK_TREE_POINTS)
+	if points > 0 then
+		digger:set_attribute("lumberjack_tree_points", tostring(points - 1))
+	end
+	if points == 0 then
+		return check_points(digger)
 	end
 	return false
 end
+
+local function after_place_sapling(pos, placer)
+	local points = tonumber(placer:get_attribute("lumberjack_sapl_points") or LUMBERJACK_SAPL_POINTS)
+	if points > 0 then
+		placer:set_attribute("lumberjack_sapl_points", tostring(points - 1))
+	end
+	if points == 0 then
+		check_points(placer)
+	end
+end	
 
 --
 -- Remove the complete tree and return the number of removed items
@@ -99,6 +149,7 @@ local function remove_tree(pos, radius, name)
 	return num_nodes
 end
 
+
 --
 -- Add tree items to the players inventory
 --
@@ -110,19 +161,18 @@ local function add_to_inventory(digger, name, len)
 	end
 end	
 
-
 --
 -- Remove the complete tree if the digged node belongs to a tree
 --
 local function after_dig_node(pos, oldnode, oldmetadata, digger)
 	if not digger or digger:get_player_control().sneak then	return end
-	-- not a player placed node?
-	if oldnode.param1 == MY_PARAM1_VAL then return end
-	-- not root nodes?
+	-- Player placed node?
+	if oldnode.param1 ~= 0 then return end
+	-- Or root nodes?
 	local height_min = lTrees[oldnode.name].height_min or 3
 	local test_pos = {x=pos.x, y=pos.y+height_min-1, z=pos.z}
 	if minetest.get_node(test_pos).name ~= oldnode.name then return	end
-	-- OK, cut tree
+	-- Fell the tree
 	local radius = lTrees[oldnode.name].radius or 0
 	local num_nodes = remove_tree(pos, radius, oldnode.name)
 	add_to_inventory(digger, oldnode.name, num_nodes)
@@ -153,9 +203,10 @@ local function can_dig(pos, digger)
 		return true
 	end
 	local node = minetest.get_node(pos)
-	if not check_level(pos, node.name) then
+	if is_top_tree_node(pos, node.name) or needed_points(digger) then
 		return true
 	end
+	minetest.chat_send_player(digger:get_player_name(), "[Lumberjack Mod] From the top, please")
 	return false
 end
 
@@ -169,44 +220,56 @@ minetest.register_privilege("lumberjack",
 -- 'radius' the the range (+x/-x/+z/-z), where all available tree nodes will be removed-
 -- 'stem_height_min' is the minimum number of tree nodes, to be a valid stem (and not the a root)-
 --
-function lumberjack.register_tree(name, radius, stem_height_min)
-	local data = minetest.registered_nodes[name]
+function lumberjack.register_tree(tree_name, sapling_name, radius, stem_height_min)
+	
+	-- check tree attributes
+	local data = minetest.registered_nodes[tree_name]
 	if data == nil then
-		error("[lumberjack] "..name.." is no valid item")
+		error("[lumberjack] "..tree_name.." is no valid item")
 	end
 	if data.after_dig_node then
-		error("[lumberjack] "..name.." has already an 'after_dig_node' function")
+		error("[lumberjack] "..tree_name.." has already an 'after_dig_node' function")
 	end
 	if data.on_construct then
-		error("[lumberjack] "..name.." has already an 'on_construct' function")
+		error("[lumberjack] "..tree_name.." has already an 'on_construct' function")
 	end
 	if data.can_dig then
-		error("[lumberjack] "..name.." has already a 'can_dig' function")
+		error("[lumberjack] "..tree_name.." has already a 'can_dig' function")
 	end
 	if not data.groups.choppy then
-		error("[lumberjack] "..name.." has no 'choppy' property")
+		error("[lumberjack] "..tree_name.." has no 'choppy' property")
 	end
-	minetest.override_item(name, {
+	
+	-- check saplung attributes
+	if minetest.registered_nodes[sapling_name].after_place_node then
+		error("[lumberjack] "..sapling_name.." has already an 'after_place_node' function")
+	end
+	
+	minetest.override_item(tree_name, {
 			after_dig_node = after_dig_node, 
 			on_construct = on_construct,
 			can_dig = can_dig,
 	})
-	lTrees[name] = {radius=radius, height_min=stem_height_min, choppy=data.groups.choppy}
+	minetest.override_item(sapling_name, {
+			after_place_node = after_place_sapling
+	})
+
+	lTrees[tree_name] = {radius=radius, height_min=stem_height_min, choppy=data.groups.choppy}
 end
 
-lumberjack.register_tree("default:jungletree", 1, 5)
-lumberjack.register_tree("default:acacia_tree", 2, 3)
-lumberjack.register_tree("default:aspen_tree", 0, 5)
-lumberjack.register_tree("default:tree", 1, 2)
-lumberjack.register_tree("default:pine_tree", 0, 3)
+lumberjack.register_tree("default:tree", "default:sapling", 1, 2)
+lumberjack.register_tree("default:jungletree", "default:junglesapling", 1, 5)
+lumberjack.register_tree("default:acacia_tree", "default:acacia_sapling", 2, 3)
+lumberjack.register_tree("default:aspen_tree", "default:aspen_sapling", 0, 5)
+lumberjack.register_tree("default:pine_tree", "default:pine_sapling", 0, 3)
 
 if minetest.get_modpath("ethereal") and ethereal ~= nil then 
-	lumberjack.register_tree("ethereal:palm_trunk", 1, 3)
-	lumberjack.register_tree("ethereal:mushroom_trunk", 1, 3)
-	lumberjack.register_tree("ethereal:birch_trunk", 0, 3)
-	lumberjack.register_tree("ethereal:banana_trunk", 1, 3)
-	lumberjack.register_tree("ethereal:willow_trunk", 4, 3)
-	lumberjack.register_tree("ethereal:frost_tree", 1, 3)
+	lumberjack.register_tree("ethereal:palm_trunk", "ethereal:palm_sapling", 1, 3)
+	lumberjack.register_tree("ethereal:mushroom_trunk", "ethereal:mushroom_sapling", 1, 3)
+	lumberjack.register_tree("ethereal:birch_trunk", "ethereal:birch_sapling", 0, 3)
+	lumberjack.register_tree("ethereal:banana_trunk", "ethereal:banana_tree_sapling", 1, 3)
+	lumberjack.register_tree("ethereal:willow_trunk", "ethereal:willow_sapling", 4, 3)
+	lumberjack.register_tree("ethereal:frost_tree", "ethereal:frost_tree_sapling", 1, 3)
 end
 
 

@@ -1,12 +1,16 @@
 # Lumberjack
 
-A simple mod based on ideas from the mods TreeCapitator, Timber, and New Timber.
-This mod allows to hit the bottom of the tree and the whole tree (wood) is harvested
+Mod to completely cut trees by destroying only one block.
+
+This mod allows to destroy the bottom of the tree and the whole tree is felled
 and moved to the players inventory.
+
 But therefore 'lumberjack' privs are needed, otherwise you have to dig the hole tree from the top.
 (prevents part of trees hanging in the air)
-To distinguish between "grown" trees and playes tree nodes, the 'node.param1'
-is used to identify placed nodes.
+
+To get the lumberjack privs, the player has to collect harvesting points by harvesting tree blocks and placing saplings.
+
+This mod based on ideas from the mods TreeCapitator, Timber, and New Timber.
 
 
 ## Dependencies
@@ -20,3 +24,4 @@ Sound is taken from Hybrid Dog (TreeCapitator)
 # History
 V0.1  07/Apr/2018  Mod initial created
 v0.2  08/Apr/2018  Priv 'lumberjack' added, digging of trees from the top only added, tool wearing added
+v0.3  09/apr/2018  Harvesting points for placing saplings and destroying tree blocks added to reach lumberjack privs
