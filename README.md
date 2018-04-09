@@ -8,7 +8,7 @@ But therefore 'lumberjack' privs are needed, otherwise you have to dig the hole 
 (prevents part of trees hanging in the air)  
 To get the lumberjack privs, the player has to collect harvesting points by harvesting tree blocks and placing saplings.
 
-This mod based on ideas from the mods TreeCapitator, Timber, and New Timber.
+This mod is based on ideas from the mods TreeCapitator, Timber, and New Timber.
 
 
 ## Dependencies
