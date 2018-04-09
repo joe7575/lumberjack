@@ -203,6 +203,9 @@ local function can_dig(pos, digger)
 		return true
 	end
 	local node = minetest.get_node(pos)
+	if node.param1 ~= 0 then 
+		return true
+	end
 	if is_top_tree_node(pos, node.name) or needed_points(digger) then
 		return true
 	end
