@@ -78,7 +78,7 @@ local function remove_level(pos1, pos2, name)
 end
 
 --
--- Check for tree node on the next higher level
+-- Check for tree nodes on the next higher level
 --
 local function is_top_tree_node(pos, name)
 	local pos1 = {x=pos.x-1, y=pos.y+1, z=pos.z-1}
@@ -90,6 +90,9 @@ local function is_top_tree_node(pos, name)
 end
 
 
+--
+-- Check for the necessary number of points and grant lumberjack privs if level is reached
+--
 local function check_points(player)
 	local points = tonumber(player:get_attribute("lumberjack_tree_points") or LUMBERJACK_TREE_POINTS)
 	points = points	+ tonumber(player:get_attribute("lumberjack_sapl_points") or LUMBERJACK_SAPL_POINTS)
@@ -122,6 +125,9 @@ local function needed_points(digger)
 	return false
 end
 
+--
+-- Decrement sapling points
+--
 local function after_place_sapling(pos, placer)
 	local points = tonumber(placer:get_attribute("lumberjack_sapl_points") or LUMBERJACK_SAPL_POINTS)
 	if points > 0 then
@@ -162,7 +168,7 @@ local function add_to_inventory(digger, name, len)
 end	
 
 --
--- Remove the complete tree if the digged node belongs to a tree
+-- Remove the complete tree if the destroyed node belongs to a tree
 --
 local function after_dig_node(pos, oldnode, oldmetadata, digger)
 	if not digger or digger:get_player_control().sneak then	return end
@@ -183,7 +189,7 @@ local function after_dig_node(pos, oldnode, oldmetadata, digger)
 end	
 
 --
--- Mark node as "player placed"
+-- Mark node as "placed by player"
 --
 local function on_construct(pos)
 	local node = minetest.get_node(pos)
@@ -220,8 +226,10 @@ minetest.register_privilege("lumberjack",
 
 --
 -- Register the tree node to the lumberjack mod.
--- 'radius' the the range (+x/-x/+z/-z), where all available tree nodes will be removed-
--- 'stem_height_min' is the minimum number of tree nodes, to be a valid stem (and not the a root)-
+-- 'tree_name' is the tree item name,, e.g. "default:tree"
+-- 'sapling_name' is the tree sapling name, e.g. "default:sapling"
+-- 'radius' the the range in nodes (+x/-x/+z/-z), where all available tree nodes will be removed.
+-- 'stem_height_min' is the minimum number of tree nodes, to be a valid stem (and not the a root item).
 --
 function lumberjack.register_tree(tree_name, sapling_name, radius, stem_height_min)
 	
@@ -243,7 +251,7 @@ function lumberjack.register_tree(tree_name, sapling_name, radius, stem_height_m
 		error("[lumberjack] "..tree_name.." has no 'choppy' property")
 	end
 	
-	-- check saplung attributes
+	-- check sapling attributes
 	if minetest.registered_nodes[sapling_name].after_place_node then
 		error("[lumberjack] "..sapling_name.." has already an 'after_place_node' function")
 	end
@@ -275,7 +283,7 @@ if minetest.get_modpath("ethereal") and ethereal ~= nil then
 	lumberjack.register_tree("ethereal:frost_tree", "ethereal:frost_tree_sapling", 1, 3)
 end
 
-
+-- TODO
 --"moretrees:beech_trunk"
 --"moretrees:apple_tree_trunk"
 --"moretrees:oak_trunk"
