@@ -9,19 +9,19 @@ This mod fulfills several aspects:
   
 This mod allows to completely fell trees by destroying only one block. The whole tree is harvested and moved to the players inventory. But therefore lumberjack privs are needed. New player normally will not get the necessary privs immediately, they have to harvest the tree from the top, block by block "to improve their skills".
 
-But there are tree configuration possibilities:
+But there are three configuration possibilities:
 1. All players get directly lumberjack privs
 2. Players have to collect points to get lumberjack privs
 3. Players will never get lumberjack privs from the mod itself (but will be granted by means of other reasons)
 
 Points have to be collected by harvesting tree blocks *AND* planting saplings.
-The default setting is 400 which means, you have to harvest more then 400 tree blocks and plant more then 80 (400/5) saplings to get lumberjack privs.
+The default setting is 400 which means, you have to harvest more then 400 tree blocks and plant more then 66 (400/6) saplings to get lumberjack privs.
 
 The configuration can be changed directly in the file 'settingtypes.txt' or by means of the Minetest GUI.
 
 Some technical aspects:
 - 'param1' of the nodes data is used to distinguish between grown trees and placed tree blocks so that this mod will not have any impact to buildings or other objects based on tree blocks
-- a API function allows to register additional trees from other mods
+- an API function allows to register additional trees from other mods, which is quite simple
 - the Ethereal mod is already supported, others will follow
  
  
