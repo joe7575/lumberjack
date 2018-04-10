@@ -205,8 +205,13 @@ local function can_dig(pos, digger)
 	if minetest.is_protected(pos, digger:get_player_name()) then
 		return false
 	end
-	if minetest.check_player_privs(digger:get_player_name(), "lumberjack") and chopper_tool(digger) then
-		return true
+	if minetest.check_player_privs(digger:get_player_name(), "lumberjack") then
+		if chopper_tool(digger) then
+			return true
+		else
+			minetest.chat_send_player(digger:get_player_name(), "[Lumberjack Mod] You have to use an axe")
+			return false
+		end
 	end
 	local node = minetest.get_node(pos)
 	if node.param1 ~= 0 then 

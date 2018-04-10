@@ -1,16 +1,30 @@
 # Lumberjack
 
-Mod to completely cut trees by destroying only one block.
+A Mod for tree harvesting and planting!
 
-This mod allows to destroy the bottom of the tree and the whole tree is felled
-and moved to the players inventory.  
-But therefore 'lumberjack' privs are needed, otherwise you have to dig the hole tree from the top.  
-(prevents part of trees hanging in the air)  
-To get the lumberjack privs, the player has to collect harvesting points by harvesting tree blocks and placing saplings.
+This mod fulfills several aspects:
+- New players are trained to always fell trees completely and replace them with saplings (education for sustainability)
+- Trained players with additional "skills" get lumberjack privs to fell trees more efficiently (based on ideas from TreeCapitator and several Timber mods)
+- No parts of trees hanging in the air anymore
+  
+This mod allows to completely fell trees by destroying only one block. The whole tree is harvested and moved to the players inventory. But therefore lumberjack privs are needed. New player normally will not get the necessary privs, they have to harvest the tree from the top, block by block.
 
-This mod is based on ideas from the mods TreeCapitator, Timber, and New Timber.
+But there are tree configuration possibilities:
+1. All players get directly lumberjack privs
+2. Players have to collect points to get lumberjack privs
+3. Players will never get lumberjack privs from the mod itself (but will be granted by means of other reasons)
 
+Points can be collected by harvesting tree blocks *AND* planting saplings.
+The default setting is 400 which means, you have to harvest 400 tree blocks and plant 80 (400/5) saplings to get lumberjack privs.
 
+The configuration can be changed directly in the file 'settingtypes.txt' or by means of the Minetest GUI.
+
+Some technical aspects:
+- param1 of the nodes data is used to distinguish between grown trees and placed tree blocks so that this mod will not have any impact to buildings or other objects based on tree blocks
+- a API function allows to register additional tree from other mods
+- the Ethereal mod is already supported, other will follow
+ 
+ 
 ## Dependencies
 default
 
