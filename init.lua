@@ -159,11 +159,13 @@ end
 --
 -- Add tree items to the players inventory
 --
-local function add_to_inventory(digger, name, len)
+local function add_to_inventory(digger, name, len, pos)
 	local inv = digger:get_inventory()
 	local items = ItemStack(name .. " " .. len)
 	if inv and items and inv:room_for_item("main", items) then
 		inv:add_item("main", items)
+	else
+		minetest.item_drop(items, digger, pos)
 	end
 end	
 
@@ -181,7 +183,7 @@ local function after_dig_node(pos, oldnode, oldmetadata, digger)
 	-- Fell the tree
 	local radius = lTrees[oldnode.name].radius or 0
 	local num_nodes = remove_tree(pos, radius, oldnode.name)
-	add_to_inventory(digger, oldnode.name, num_nodes)
+	add_to_inventory(digger, oldnode.name, num_nodes, pos)
 	add_wear(digger, oldnode, num_nodes)
 	minetest.log("action", digger:get_player_name().." fells "..oldnode.name..
 					" ("..num_nodes.." items)".." at "..minetest.pos_to_string(pos))
