@@ -42,6 +42,30 @@ local function chopper_tool(digger)
 end
 
 --
+-- Remove/add tree steps
+--
+local function remove_steps(pos)
+	local pos1 = {x=pos.x-1, y=pos.y, z=pos.z-1}
+	local pos2 = {x=pos.x+1, y=pos.y, z=pos.z+1}
+	for _,pos in ipairs(minetest.find_nodes_in_area(pos1, pos2, "lumberjack:step")) do
+		minetest.remove_node(pos)
+	end
+end
+
+local function add_steps(pos, digger)
+	local facedir = minetest.dir_to_facedir(digger:get_look_dir(), false)
+	local dir = minetest.facedir_to_dir((facedir + 2) % 4)
+	local newpos = vector.add(pos, dir)
+	minetest.add_node(newpos, {name="lumberjack:step", param2=facedir})
+end
+
+local function on_punch(pos, node, puncher)
+	if chopper_tool(puncher) then
+		add_steps(pos, puncher)
+	end
+end
+
+--
 -- tool wearing
 --
 local function add_wear(digger, node, num_nodes)
@@ -64,6 +88,7 @@ local function remove_items(pos1, pos2, name)
 	local cnt = 0
 	for _,pos in ipairs(minetest.find_nodes_in_area(pos1, pos2, name)) do
 		minetest.remove_node(pos)
+		remove_steps(pos)
 		cnt = cnt + 1
 	end
 	return cnt
@@ -79,31 +104,6 @@ local function is_top_tree_node(pos, name)
 		return false
 	end
 	return true
-end
-
-
---
--- Remove/add tree steps
---
-local function remove_steps(pos)
-	local pos1 = {x=pos.x-1, y=pos.y, z=pos.z-1}
-	local pos2 = {x=pos.x+1, y=pos.y, z=pos.z+1}
-	for _,pos in ipairs(minetest.find_nodes_in_area(pos1, pos2, "lumberjack:step")) do
-		minetest.remove_node(pos)
-	end
-end
-
-local function add_steps(pos, digger)
-	local facedir = minetest.dir_to_facedir(digger:get_look_dir(), false)
-	local dir = minetest.facedir_to_dir((facedir + 2) % 4)
-	local newpos = vector.add(pos, dir)
-	minetest.add_node(newpos, {name="lumberjack:step", param2=facedir})
-end
-
-local function on_punch(pos, node, puncher)
-	if chopper_tool(puncher) then
-		add_steps(pos, puncher)
-	end
 end
 
 --
