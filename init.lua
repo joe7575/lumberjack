@@ -50,14 +50,6 @@ local function add_wear(digger, node, num_nodes)
 		local caps = tool:get_tool_capabilities()
 		if caps.groupcaps and caps.groupcaps.choppy then 
 			local uses = caps.groupcaps.choppy.uses or 10
---			local maxlevel = caps.groupcaps.choppy.maxlevel or 1
---			local choppy = lTrees[node.name].choppy or 1
---			local leveldiff = choppy - maxlevel
---			if leveldiff == 1 then
---				uses = uses * 3
---			elseif leveldiff == 2 then
---				uses = uses * 9
---			end
 			uses = uses * 9
 			tool:add_wear(65535 * num_nodes / uses)
 			digger:set_wielded_item(tool)
@@ -66,9 +58,9 @@ local function add_wear(digger, node, num_nodes)
 end
 
 --
--- Remove all treen nodes in the given range
+-- Remove all treen nodes in the given area
 --
-local function remove_level(pos1, pos2, name)
+local function remove_items(pos1, pos2, name)
 	local cnt = 0
 	for _,pos in ipairs(minetest.find_nodes_in_area(pos1, pos2, name)) do
 		minetest.remove_node(pos)
@@ -89,6 +81,30 @@ local function is_top_tree_node(pos, name)
 	return true
 end
 
+
+--
+-- Remove/add tree steps
+--
+local function remove_steps(pos)
+	local pos1 = {x=pos.x-1, y=pos.y, z=pos.z-1}
+	local pos2 = {x=pos.x+1, y=pos.y, z=pos.z+1}
+	for _,pos in ipairs(minetest.find_nodes_in_area(pos1, pos2, "lumberjack:step")) do
+		minetest.remove_node(pos)
+	end
+end
+
+local function add_steps(pos, digger)
+	local facedir = minetest.dir_to_facedir(digger:get_look_dir(), false)
+	local dir = minetest.facedir_to_dir((facedir + 2) % 4)
+	local newpos = vector.add(pos, dir)
+	minetest.add_node(newpos, {name="lumberjack:step", param2=facedir})
+end
+
+local function on_punch(pos, node, puncher)
+	if chopper_tool(puncher) then
+		add_steps(pos, puncher)
+	end
+end
 
 --
 -- Check for the necessary number of points and grant lumberjack privs if level is reached
@@ -145,12 +161,12 @@ local function remove_tree(pos, radius, name)
 	local level = 1
 	local num_nodes = 0
 	while true do
-		local pos1 = {x=pos.x-radius, y=pos.y+level, z=pos.z-radius}
-		local pos2 = {x=pos.x+radius, y=pos.y+level, z=pos.z+radius}
-		local cnt = remove_level(pos1, pos2, name)
+		local pos1 = {x=pos.x-radius, y=pos.y+level,   z=pos.z-radius}
+		local pos2 = {x=pos.x+radius, y=pos.y+level+2, z=pos.z+radius}
+		local cnt = remove_items(pos1, pos2, name)
 		if cnt == 0 then break end
 		num_nodes = num_nodes + cnt
-		level = level + 1
+		level = level + 2
 	end
 	return num_nodes
 end
@@ -173,6 +189,7 @@ end
 -- Remove the complete tree if the destroyed node belongs to a tree
 --
 local function after_dig_node(pos, oldnode, oldmetadata, digger)
+	remove_steps(pos)
 	if not digger or digger:get_player_control().sneak then	return end
 	-- Player placed node?
 	if oldnode.param1 ~= 0 then return end
@@ -230,6 +247,29 @@ minetest.register_privilege("lumberjack",
 	{description = "Gives you the rights to fell a tree at once", 
 	give_to_singleplayer = true})
 
+minetest.register_node("lumberjack:step", {
+	description = "Lumberjack Step",
+	drawtype = "nodebox",
+	tiles = {"lumberjack_steps.png"},
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{  -0.5, -0.5, 0.49,  0.5,  0.5,  0.5},
+		},
+	},	
+	paramtype2 = "facedir",
+	is_ground_content = false,
+	climbable = true,
+	paramtype = "light",
+	use_texture_alpha = true,
+	sunlight_propagates = true,
+	walkable = false,
+	pointable = false,
+	diggable = false,
+	drop = "",
+	groups = {choppy = 2},
+})
+
 
 --
 -- Register the tree node to the lumberjack mod.
@@ -267,6 +307,7 @@ function lumberjack.register_tree(tree_name, sapling_name, radius, stem_height_m
 			after_dig_node = after_dig_node, 
 			on_construct = on_construct,
 			can_dig = can_dig,
+			on_punch = on_punch,
 	})
 	minetest.override_item(sapling_name, {
 			after_place_node = after_place_sapling
@@ -281,7 +322,7 @@ lumberjack.register_tree("default:acacia_tree", "default:acacia_sapling", 2, 3)
 lumberjack.register_tree("default:aspen_tree", "default:aspen_sapling", 0, 5)
 lumberjack.register_tree("default:pine_tree", "default:pine_sapling", 0, 3)
 
-if minetest.get_modpath("ethereal") and ethereal ~= nil then 
+if minetest.get_modpath("ethereal") and minetest.global_exists("ethereal") then 
 	lumberjack.register_tree("ethereal:palm_trunk", "ethereal:palm_sapling", 1, 3)
 	lumberjack.register_tree("ethereal:mushroom_trunk", "ethereal:mushroom_sapling", 1, 3)
 	lumberjack.register_tree("ethereal:birch_trunk", "ethereal:birch_sapling", 0, 3)
@@ -303,3 +344,4 @@ end
 --"moretrees:rubber_tree_trunk"
 --"moretrees:jungletree_trunk"
 --"moretrees:fir_trunk"
+
