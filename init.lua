@@ -30,14 +30,16 @@ local LUMBERJACK_SAPL_POINTS = LUMBERJACK_TREE_POINTS / 6
 local lTrees = {} -- List of registered tree items
 
 --
--- Check if used tool is some kind of axe
+-- Check if used tool is some kind of axe and is used by a player
 --
 local function chopper_tool(digger)
-	local tool = digger:get_wielded_item()
-	if tool then
-		local caps = tool:get_tool_capabilities()
-		return caps.groupcaps and caps.groupcaps.choppy
-	end 
+	if digger and digger:is_player() then
+		local tool = digger:get_wielded_item()
+		if tool then
+			local caps = tool:get_tool_capabilities()
+			return caps.groupcaps and caps.groupcaps.choppy
+		end 
+	end
 	return false
 end
 
@@ -56,14 +58,16 @@ local function add_steps(pos, digger)
 	local facedir = minetest.dir_to_facedir(digger:get_look_dir(), false)
 	local dir = minetest.facedir_to_dir((facedir + 2) % 4)
 	local newpos = vector.add(pos, dir)
-	-- TODO: check for other items!!!
-	minetest.add_node(newpos, {name="lumberjack:step", param2=facedir})
+	if minetest.get_node(newpos).name == "air" then
+		minetest.add_node(newpos, {name="lumberjack:step", param2=facedir})
+	end
 end
 
 local function on_punch(pos, node, puncher)
-	-- TODO: check for area privs!!!
-	if chopper_tool(puncher) then
-		add_steps(pos, puncher)
+	if chopper_tool(puncher) and node.param1 == 0 then  -- grown tree?
+		if not minetest.is_protected(pos, puncher:get_player_name()) then
+			add_steps(pos, puncher)
+		end
 	end
 end
 
@@ -84,7 +88,7 @@ local function add_wear(digger, node, num_nodes)
 end
 
 --
--- Remove all treen nodes in the given area
+-- Remove all treen nodes including steps in the given area
 --
 local function remove_items(pos1, pos2, name)
 	local cnt = 0
@@ -98,10 +102,11 @@ end
 
 --
 -- Check for tree nodes on the next higher level
+-- We have to check more than one level, because Ethereal allows stem gaps
 --
 local function is_top_tree_node(pos, name)
 	local pos1 = {x=pos.x-1, y=pos.y+1, z=pos.z-1}
-	local pos2 = {x=pos.x+1, y=pos.y+1, z=pos.z+1}
+	local pos2 = {x=pos.x+1, y=pos.y+3, z=pos.z+1}
 	for _,pos in ipairs(minetest.find_nodes_in_area(pos1, pos2, name)) do
 		return false
 	end
@@ -163,12 +168,13 @@ local function remove_tree(pos, radius, name)
 	local level = 1
 	local num_nodes = 0
 	while true do
+		-- We have to check more than one level, because Ethereal allows stem gaps
 		local pos1 = {x=pos.x-radius, y=pos.y+level,   z=pos.z-radius}
 		local pos2 = {x=pos.x+radius, y=pos.y+level+2, z=pos.z+radius}
 		local cnt = remove_items(pos1, pos2, name)
 		if cnt == 0 then break end
 		num_nodes = num_nodes + cnt
-		level = level + 2
+		level = level + 3
 	end
 	return num_nodes
 end
@@ -191,10 +197,11 @@ end
 -- Remove the complete tree if the destroyed node belongs to a tree
 --
 local function after_dig_node(pos, oldnode, oldmetadata, digger)
-	remove_steps(pos)
-	if not digger or digger:get_player_control().sneak then	return end
 	-- Player placed node?
 	if oldnode.param1 ~= 0 then return end
+	remove_steps(pos)
+	-- don't remove hole tree?
+	if not digger or digger:get_player_control().sneak then	return end
 	-- Or root nodes?
 	local height_min = lTrees[oldnode.name].height_min or 3
 	local test_pos = {x=pos.x, y=pos.y+height_min-1, z=pos.z}
@@ -267,7 +274,6 @@ minetest.register_node("lumberjack:step", {
 	sunlight_propagates = true,
 	walkable = false,
 	pointable = false,
-	diggable = false,
 	drop = "",
 	groups = {choppy = 2},
 })
