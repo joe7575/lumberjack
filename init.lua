@@ -56,10 +56,12 @@ local function add_steps(pos, digger)
 	local facedir = minetest.dir_to_facedir(digger:get_look_dir(), false)
 	local dir = minetest.facedir_to_dir((facedir + 2) % 4)
 	local newpos = vector.add(pos, dir)
+	-- TODO: check for other items!!!
 	minetest.add_node(newpos, {name="lumberjack:step", param2=facedir})
 end
 
 local function on_punch(pos, node, puncher)
+	-- TODO: check for area privs!!!
 	if chopper_tool(puncher) then
 		add_steps(pos, puncher)
 	end
