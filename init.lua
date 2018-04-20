@@ -69,6 +69,7 @@ local function on_punch(pos, node, puncher)
 			add_steps(pos, puncher)
 		end
 	end
+	minetest.node_punch(pos, node, puncher, pointed_thing)
 end
 
 --
