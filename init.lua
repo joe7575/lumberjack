@@ -63,7 +63,7 @@ local function add_steps(pos, digger)
 	end
 end
 
-local function on_punch(pos, node, puncher)
+local function on_punch(pos, node, puncher, pointed_thing)
 	if chopper_tool(puncher) and node.param1 == 0 then  -- grown tree?
 		if not minetest.is_protected(pos, puncher:get_player_name()) then
 			add_steps(pos, puncher)
