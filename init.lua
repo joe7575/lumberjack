@@ -201,14 +201,20 @@ local function after_dig_node(pos, oldnode, oldmetadata, digger)
 	-- Player placed node?
 	if oldnode.param1 ~= 0 then return end
 	remove_steps(pos)
-	-- don't remove hole tree?
+	-- don't remove whole tree?
 	if not digger or digger:get_player_control().sneak then	return end
+	-- Get tree parameters
+	local height_min = 3
+	local radius = 0
+	local registered_tree = lTrees[oldnode.name]
+	if registered_tree then
+		height_min = registered_tree.height_min or height_min
+		radius = registered_tree.radius or radius
+	end
 	-- Or root nodes?
-	local height_min = lTrees[oldnode.name].height_min or 3
 	local test_pos = {x=pos.x, y=pos.y+height_min-1, z=pos.z}
 	if minetest.get_node(test_pos).name ~= oldnode.name then return	end
 	-- Fell the tree
-	local radius = lTrees[oldnode.name].radius or 0
 	local num_nodes = remove_tree(pos, radius, oldnode.name)
 	add_to_inventory(digger, oldnode.name, num_nodes, pos)
 	add_wear(digger, oldnode, num_nodes)
