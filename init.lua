@@ -346,17 +346,18 @@ if minetest.get_modpath("ethereal") and minetest.global_exists("ethereal") then
 	lumberjack.register_tree("ethereal:frost_tree", "ethereal:frost_tree_sapling", 1, 3)
 end
 
--- TODO
---"moretrees:beech_trunk"
---"moretrees:apple_tree_trunk"
---"moretrees:oak_trunk"
---"moretrees:sequoia_trunk"
---"moretrees:birch_trunk"
---"moretrees:palm_trunk"
---"moretrees:spruce_trunk"
---"moretrees:pine_trunk"
---"moretrees:willow_trunk"
---"moretrees:rubber_tree_trunk"
---"moretrees:jungletree_trunk"
---"moretrees:fir_trunk"
-
+if minetest.get_modpath("moretrees") and minetest.global_exists("moretrees") then
+	lumberjack.register_tree("moretrees:beech_trunk", "moretrees:beech_sapling", 1, 3)
+	lumberjack.register_tree("moretrees:apple_tree_trunk", "moretrees:apple_tree_sapling", 8, 3)
+	lumberjack.register_tree("moretrees:oak_trunk", "moretrees:oak_sapling", 13,5 )
+	lumberjack.register_tree("moretrees:sequoia_trunk", "moretrees:sequoia_sapling", 9, 3)
+	lumberjack.register_tree("moretrees:birch_trunk", "moretrees:birch_sapling", 12,5)
+	lumberjack.register_tree("moretrees:palm_trunk", "moretrees:palm_sapling", 5, 3)
+--	lumberjack.register_tree("moretrees:palm_fruit_trunk", "moretrees:palm_sapling", 5, 3)
+	lumberjack.register_tree("moretrees:spruce_trunk", "moretrees:spruce_sapling", 1, 3)
+	lumberjack.register_tree("moretrees:pine_trunk", "moretrees:pine_sapling", 0, 3)
+	lumberjack.register_tree("moretrees:willow_trunk", "moretrees:willow_sapling",1,3)
+	lumberjack.register_tree("moretrees:rubber_tree_trunk", "moretrees:rubber_tree_sapling", 7, 3)
+--	lumberjack.register_tree("moretrees:jungletree_trunk", "moretrees:jungletree_sapling", 1, 5) -- crashes
+	lumberjack.register_tree("moretrees:fir_trunk", "moretrees:fir_sapling", 5, 3) -- below leaves by 5
+end
