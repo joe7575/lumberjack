@@ -35,6 +35,9 @@ local lTrees = {} -- List of registered tree items
 local function chopper_tool(digger)
 	if digger and digger:is_player() then
 		local tool = digger:get_wielded_item()
+		if tool:get_name() == "screwdriver:screwdriver" then
+			return true
+		end
 		if tool then
 			local caps = tool:get_tool_capabilities()
 			return caps.groupcaps and caps.groupcaps.choppy

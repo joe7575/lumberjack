@@ -29,7 +29,7 @@ Some technical aspects:
 default
 
 # License
-Copyright (C) 2018 Joachim Stolberg  
+Copyright (C) 2018-2020 Joachim Stolberg  
 Code: Licensed under the GNU LGPL version 2.1 or later. See LICENSE.txt and http://www.gnu.org/licenses/lgpl-2.1.txt  
 Sound is taken from Hybrid Dog (TreeCapitator)
 
@@ -39,4 +39,5 @@ v0.2 - 08/Apr/2018 - Priv 'lumberjack' added, digging of trees from the top only
 v0.3 - 09/Apr/2018 - Harvesting points for placing saplings and destroying tree blocks added to reach lumberjack privs  
 v0.4 - 16/Apr/2018 - Stem steps added  
 v0.5 - 17/Apr/2018 - protection bug fixed, further improvements  
+v0.6  -07/Jan/2020 - screwdriver bugfix
 
