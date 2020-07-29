@@ -42,4 +42,4 @@ v0.5 - 17/Apr/2018 - protection bug fixed, further improvements
 v0.6 - 07/Jan/2020 - screwdriver bugfix  
 v0.7 - 27/May/2020 - ethereal bugfix  
 v0.8 - 29/Jul/2020 - fake player bugfix  
-
+	
