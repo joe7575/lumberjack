@@ -156,12 +156,14 @@ end
 -- Decrement sapling points
 --
 local function after_place_sapling(pos, placer)
-	local points = tonumber(placer:get_attribute("lumberjack_sapl_points") or LUMBERJACK_SAPL_POINTS)
-	if points > 0 then
-		placer:set_attribute("lumberjack_sapl_points", tostring(points - 1))
-	end
-	if points == 0 then
-		check_points(placer)
+	if placer and placer:is_player and placer:is_player() and placer:get_attribute then
+		local points = tonumber(placer:get_attribute("lumberjack_sapl_points") or LUMBERJACK_SAPL_POINTS)
+		if points > 0 then
+			placer:set_attribute("lumberjack_sapl_points", tostring(points - 1))
+		end
+		if points == 0 then
+			check_points(placer)
+		end
 	end
 end	
 
