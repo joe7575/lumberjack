@@ -24,7 +24,7 @@ lumberjack = {}
 local MY_PARAM1_VAL = 7  -- to identify placed nodes
 
 -- Necessary number of points for dug trees and placed sapling to get lumberjack privs
-local LUMBERJACK_TREE_POINTS = tonumber(minetest.setting_get("lumberjack_points")) or 400
+local LUMBERJACK_TREE_POINTS = tonumber(minetest.settings:get("lumberjack_points")) or 400
 local LUMBERJACK_SAPL_POINTS = LUMBERJACK_TREE_POINTS / 6
 
 local lTrees = {} -- List of registered tree items
