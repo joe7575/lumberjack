@@ -122,8 +122,8 @@ end
 --
 local function check_points(player)
 	local player_attributes = player:get_meta()
-	local points = tonumber(player_attributes:get_string("lumberjack_tree_points")) or LUMBERJACK_TREE_POINTS
-	points = points	+ ( tonumber(player_attributes:get_string("lumberjack_sapl_points")) or LUMBERJACK_SAPL_POINTS )
+	local points = player_attributes:get_float("lumberjack_tree_points") or LUMBERJACK_TREE_POINTS
+	points = points	+ ( player_attributes:get_float("lumberjack_sapl_points") or LUMBERJACK_SAPL_POINTS )
 	
 	if points > 0 then
 		return false
@@ -131,8 +131,8 @@ local function check_points(player)
 		local privs = minetest.get_player_privs(player:get_player_name())
 		privs.lumberjack = true
 		minetest.set_player_privs(player:get_player_name(), privs)
-		player_attributes:get_string("lumberjack_tree_points", "-1")
-		player_attributes:get_string("lumberjack_sapl_points", "-1")
+		player_attributes:get_float("lumberjack_tree_points", "-1")
+		player_attributes:get_float("lumberjack_sapl_points", "-1")
 		minetest.chat_send_player(player:get_player_name(), "You got lumberjack privs now")
 		minetest.log("action", player:get_player_name().." got lumberjack privs")
 	end
@@ -144,9 +144,9 @@ end
 --
 local function needed_points(digger)
 	local digger_attributes = digger:get_meta()
-	local points = tonumber(digger_attributes:get_string("lumberjack_tree_points")) or LUMBERJACK_TREE_POINTS
+	local points = digger_attributes:get_float("lumberjack_tree_points") or LUMBERJACK_TREE_POINTS
 	if points > 0 then
-		digger_attributes:set_string("lumberjack_tree_points", tostring(points - 1))
+		digger_attributes:set_float("lumberjack_tree_points", points - 1)
 	end
 	if points == 0 then
 		return check_points(digger)
@@ -160,9 +160,9 @@ end
 local function after_place_sapling(pos, placer)
 	if placer and placer.is_player and placer:is_player() and placer.get_meta then
 		local placer_attributes = placer:get_meta()
-		local points = tonumber(placer_attributes:get_string("lumberjack_sapl_points")) or LUMBERJACK_SAPL_POINTS
+		local points = placer_attributes:get_float("lumberjack_sapl_points") or LUMBERJACK_SAPL_POINTS
 		if points > 0 then
-			placer_attributes:set_string("lumberjack_sapl_points", tostring(points - 1))
+			placer_attributes:set_float("lumberjack_sapl_points", points - 1)
 		end
 		if points == 0 then
 			check_points(placer)
