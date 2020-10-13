@@ -24,7 +24,7 @@ lumberjack = {}
 local MY_PARAM1_VAL = 7  -- to identify placed nodes
 
 -- Necessary number of points for dug trees and placed sapling to get lumberjack privs
-local LUMBERJACK_TREE_POINTS = tonumber(minetest.setting_get("lumberjack_points")) or 400
+local LUMBERJACK_TREE_POINTS = tonumber(minetest.settings:get("lumberjack_points")) or 400
 local LUMBERJACK_SAPL_POINTS = LUMBERJACK_TREE_POINTS / 6
 
 local lTrees = {} -- List of registered tree items
@@ -121,8 +121,9 @@ end
 -- Check for the necessary number of points and grant lumberjack privs if level is reached
 --
 local function check_points(player)
-	local points = tonumber(player:get_attribute("lumberjack_tree_points") or LUMBERJACK_TREE_POINTS)
-	points = points	+ tonumber(player:get_attribute("lumberjack_sapl_points") or LUMBERJACK_SAPL_POINTS)
+	local player_attributes = player:get_meta()
+	local points = player_attributes:get_float("lumberjack_tree_points") or LUMBERJACK_TREE_POINTS
+	points = points	+ ( player_attributes:get_float("lumberjack_sapl_points") or LUMBERJACK_SAPL_POINTS )
 	
 	if points > 0 then
 		return false
@@ -130,8 +131,8 @@ local function check_points(player)
 		local privs = minetest.get_player_privs(player:get_player_name())
 		privs.lumberjack = true
 		minetest.set_player_privs(player:get_player_name(), privs)
-		player:set_attribute("lumberjack_tree_points", "-1")
-		player:set_attribute("lumberjack_sapl_points", "-1")
+		player_attributes:get_float("lumberjack_tree_points", "-1")
+		player_attributes:get_float("lumberjack_sapl_points", "-1")
 		minetest.chat_send_player(player:get_player_name(), "You got lumberjack privs now")
 		minetest.log("action", player:get_player_name().." got lumberjack privs")
 	end
@@ -142,9 +143,10 @@ end
 -- Maintain lumberjack points and grant lumberjack privs if level is reached
 --
 local function needed_points(digger)
-	local points = tonumber(digger:get_attribute("lumberjack_tree_points") or LUMBERJACK_TREE_POINTS)
+	local digger_attributes = digger:get_meta()
+	local points = digger_attributes:get_float("lumberjack_tree_points") or LUMBERJACK_TREE_POINTS
 	if points > 0 then
-		digger:set_attribute("lumberjack_tree_points", tostring(points - 1))
+		digger_attributes:set_float("lumberjack_tree_points", points - 1)
 	end
 	if points == 0 then
 		return check_points(digger)
@@ -156,10 +158,11 @@ end
 -- Decrement sapling points
 --
 local function after_place_sapling(pos, placer)
-	if placer and placer.is_player and placer:is_player() and placer.get_attribute then
-		local points = tonumber(placer:get_attribute("lumberjack_sapl_points") or LUMBERJACK_SAPL_POINTS)
+	if placer and placer.is_player and placer:is_player() and placer.get_meta then
+		local placer_attributes = placer:get_meta()
+		local points = placer_attributes:get_float("lumberjack_sapl_points") or LUMBERJACK_SAPL_POINTS
 		if points > 0 then
-			placer:set_attribute("lumberjack_sapl_points", tostring(points - 1))
+			placer_attributes:set_float("lumberjack_sapl_points", points - 1)
 		end
 		if points == 0 then
 			check_points(placer)
