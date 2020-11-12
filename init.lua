@@ -353,7 +353,6 @@ if minetest.get_modpath("ethereal") and minetest.global_exists("ethereal") then
 	lumberjack.register_tree("ethereal:willow_trunk", "ethereal:willow_sapling", 4, 3)
 	lumberjack.register_tree("ethereal:frost_tree", "ethereal:frost_tree_sapling", 1, 3)
 	lumberjack.register_tree("ethereal:sakura_trunk", "ethereal:sakura_sapling", 4, 3)
-	lumberjack.register_tree("ethereal:redwood_trunk", "ethereal:redwood_sapling", 6, 3)
 	lumberjack.register_tree("ethereal:yellow_trunk", "ethereal:yellow_tree_sapling", 3, 3)
 end
 
