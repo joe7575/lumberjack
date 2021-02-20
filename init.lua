@@ -122,8 +122,19 @@ end
 --
 local function check_points(player)
 	local player_attributes = player:get_meta()
-	local points = player_attributes:get_float("lumberjack_tree_points") or LUMBERJACK_TREE_POINTS
-	points = points	+ ( player_attributes:get_float("lumberjack_sapl_points") or LUMBERJACK_SAPL_POINTS )
+	local points
+	
+	if player_attributes:get("lumberjack_tree_points") then
+		points = player_attributes:get_float("lumberjack_tree_points")
+	else
+		points = LUMBERJACK_TREE_POINTS
+	end
+	
+	if player_attributes:get("lumberjack_sapl_points") then
+		points = points	+ player_attributes:get_float("lumberjack_sapl_points")
+	else
+		points = points	+ LUMBERJACK_SAPL_POINTS
+	end
 	
 	if points > 0 then
 		return false
