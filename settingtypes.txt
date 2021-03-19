@@ -1,5 +1,4 @@
 # Settings for Lumberjack privs
 # 0  = Every player has lumberjack privs from the beginning.
-# -1 = No player gets lumberjack privs. The priv has to come from somewhere else.
 # >0 = Player has to collect the number points to get lumberjack privs (default 400).
 lumberjack_points (needed points to get lumberjack privs) int 400

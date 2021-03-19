@@ -3,7 +3,7 @@
 	lumberjack
 	==========
 
-	Copyright (C) 2018 Joachim Stolberg
+	Copyright (C) 2018-2021 Joachim Stolberg
 
 	LGPLv2.1+
 	See LICENSE.txt for more information
@@ -21,11 +21,14 @@
 
 lumberjack = {}
 
+-- Test MT 5.4 new string mode
+local CLIP = minetest.features.use_texture_alpha_string_modes and "clip" or true
+
 local MY_PARAM1_VAL = 7  -- to identify placed nodes
 
 -- Necessary number of points for dug trees and placed sapling to get lumberjack privs
 local LUMBERJACK_TREE_POINTS = tonumber(minetest.settings:get("lumberjack_points")) or 400
-local LUMBERJACK_SAPL_POINTS = LUMBERJACK_TREE_POINTS / 6
+local LUMBERJACK_SAPL_POINTS = math.floor(LUMBERJACK_TREE_POINTS / 6)
 
 local lTrees = {} -- List of registered tree items
 
@@ -35,12 +38,11 @@ local lTrees = {} -- List of registered tree items
 local function chopper_tool(digger)
 	if digger and digger:is_player() then
 		local tool = digger:get_wielded_item()
-		if tool:get_name() == "screwdriver:screwdriver" then
-			return true
-		end
 		if tool then
 			local caps = tool:get_tool_capabilities()
-			return caps.groupcaps and caps.groupcaps.choppy
+			if caps.groupcaps and caps.groupcaps.choppy and caps.groupcaps.choppy.maxlevel then
+				return caps.groupcaps.choppy.maxlevel < 3
+			end
 		end 
 	end
 	return false
@@ -92,7 +94,7 @@ local function add_wear(digger, node, num_nodes)
 end
 
 --
--- Remove all treen nodes including steps in the given area
+-- Remove all tree nodes including steps in the given area
 --
 local function remove_items(pos1, pos2, name)
 	local cnt = 0
@@ -120,47 +122,52 @@ end
 --
 -- Check for the necessary number of points and grant lumberjack privs if level is reached
 --
-local function check_points(player)
-	local player_attributes = player:get_meta()
-	local points
-	
-	if player_attributes:get("lumberjack_tree_points") then
-		points = player_attributes:get_float("lumberjack_tree_points")
-	else
-		points = LUMBERJACK_TREE_POINTS
+
+local function get_points(player)
+	if player and player.is_player and player:is_player() then
+		local meta = player:get_meta()
+		
+		if not meta:contains("lumberjack_tree_points") then
+			meta:set_int("lumberjack_tree_points", LUMBERJACK_TREE_POINTS)
+		end
+		if not meta:contains("lumberjack_sapl_points") then
+			meta:set_int("lumberjack_sapl_points", LUMBERJACK_SAPL_POINTS)
+		end
+		
+		local tree_points = meta:get_int("lumberjack_tree_points")
+		local sapl_points = meta:get_int("lumberjack_sapl_points")
+		
+		return tree_points, sapl_points
 	end
-	
-	if player_attributes:get("lumberjack_sapl_points") then
-		points = points	+ player_attributes:get_float("lumberjack_sapl_points")
-	else
-		points = points	+ LUMBERJACK_SAPL_POINTS
-	end
-	
-	if points > 0 then
+end
+
+local function is_lumberjack(player, tree_points, sapl_points)
+	if not tree_points or not sapl_points then
 		return false
-	elseif points == 0 then
-		local privs = minetest.get_player_privs(player:get_player_name())
-		privs.lumberjack = true
-		minetest.set_player_privs(player:get_player_name(), privs)
-		player_attributes:get_float("lumberjack_tree_points", "-1")
-		player_attributes:get_float("lumberjack_sapl_points", "-1")
-		minetest.chat_send_player(player:get_player_name(), "You got lumberjack privs now")
-		minetest.log("action", player:get_player_name().." got lumberjack privs")
+	elseif tree_points > 0 or sapl_points > 0 then
+		return false
+	elseif tree_points == 0 or sapl_points == 0 then
+		local meta = player:get_meta()
+		if not meta:contains("is_lumberjack") then
+			meta:set_int("is_lumberjack", 1)
+			local player_name = player:get_player_name()
+			minetest.chat_send_player(player_name, "You're a real lumberjack now!")
+			minetest.log("action", player_name.." got lumberjack privs")
+		end
 	end
 	return true
 end
 
 --
--- Maintain lumberjack points and grant lumberjack privs if level is reached
+-- Maintain lumberjack points
 --
-local function needed_points(digger)
-	local digger_attributes = digger:get_meta()
-	local points = digger_attributes:get_float("lumberjack_tree_points") or LUMBERJACK_TREE_POINTS
-	if points > 0 then
-		digger_attributes:set_float("lumberjack_tree_points", points - 1)
-	end
-	if points == 0 then
-		return check_points(digger)
+local function after_dig_tree(digger)
+	local tree_points, sapl_points = get_points(digger)
+	if tree_points then
+		tree_points = tree_points - 1
+		local meta = digger:get_meta()
+		meta:set_int("lumberjack_tree_points", tree_points)
+		is_lumberjack(digger, tree_points, sapl_points)
 	end
 	return false
 end
@@ -169,15 +176,12 @@ end
 -- Decrement sapling points
 --
 local function after_place_sapling(pos, placer)
-	if placer and placer.is_player and placer:is_player() and placer.get_meta then
-		local placer_attributes = placer:get_meta()
-		local points = placer_attributes:get_float("lumberjack_sapl_points") or LUMBERJACK_SAPL_POINTS
-		if points > 0 then
-			placer_attributes:set_float("lumberjack_sapl_points", points - 1)
-		end
-		if points == 0 then
-			check_points(placer)
-		end
+	local tree_points, sapl_points = get_points(placer)
+	if sapl_points then
+		sapl_points = sapl_points - 1
+		local meta = placer:get_meta()
+		meta:set_int("lumberjack_sapl_points", sapl_points)
+		is_lumberjack(placer, tree_points, sapl_points)
 	end
 end	
 
@@ -219,6 +223,8 @@ end
 local function after_dig_node(pos, oldnode, oldmetadata, digger)
 	-- Player placed node?
 	if oldnode.param1 ~= 0 then return end
+	
+	after_dig_tree(digger)
 	remove_steps(pos)
 	-- don't remove whole tree?
 	if not digger or digger:get_player_control().sneak then	return end
@@ -256,31 +262,26 @@ local function can_dig(pos, digger)
 	if not digger then
 		return true
 	end
-	if minetest.is_protected(pos, digger:get_player_name()) then
+	local name = digger:get_player_name()
+	if minetest.is_protected(pos, name) then
 		return false
 	end
-	if minetest.check_player_privs(digger:get_player_name(), "lumberjack") then
+	local tree_points, sapl_points = get_points(digger)
+	if is_lumberjack(digger, tree_points, sapl_points) then
 		if chopper_tool(digger) then
 			return true
-		else
-			minetest.chat_send_player(digger:get_player_name(), "[Lumberjack Mod] You have to use an axe")
-			return false
 		end
 	end
 	local node = minetest.get_node(pos)
 	if node.param1 ~= 0 then 
 		return true
 	end
-	if is_top_tree_node(pos, node.name) or needed_points(digger) then
+	if is_top_tree_node(pos, node.name) then
 		return true
 	end
-	minetest.chat_send_player(digger:get_player_name(), "[Lumberjack Mod] From the top, please")
+	minetest.chat_send_player(name, "[Lumberjack Mod] From the top, please")
 	return false
 end
-
-minetest.register_privilege("lumberjack", 
-	{description = "Gives you the rights to fell a tree at once", 
-	give_to_singleplayer = true})
 
 minetest.register_node("lumberjack:step", {
 	description = "Lumberjack Step",
@@ -296,7 +297,7 @@ minetest.register_node("lumberjack:step", {
 	is_ground_content = false,
 	climbable = true,
 	paramtype = "light",
-	use_texture_alpha = true,
+	use_texture_alpha = CLIP,
 	sunlight_propagates = true,
 	walkable = false,
 	pointable = false,
@@ -350,6 +351,46 @@ function lumberjack.register_tree(tree_name, sapling_name, radius, stem_height_m
 	lTrees[tree_name] = {radius=radius, height_min=stem_height_min, choppy=data.groups.choppy}
 end
 
+minetest.register_chatcommand("lumberjack", {
+	description = "Output your lumberjack points",
+	func = function(name, param)
+		local tree_points, sapl_points = get_points(minetest.get_player_by_name(name))
+		if tree_points > 0 and sapl_points > 0 then
+			return true, "You need further " .. tree_points .. " tree " .. " and " .. sapl_points .. " sapling points."
+		elseif tree_points > 0 then
+			return true, "You need further " .. tree_points .. " tree points."
+		elseif sapl_points > 0 then
+			return true, "You need further " .. sapl_points .. " sapling points."
+		else
+			return true, "You are already a lumberjack."
+		end
+	end
+})
+
+minetest.register_chatcommand("set_lumberjack_points", {
+	params = "<name> <tree-points>",
+	description = "Give a player lumberjack points",
+	privs = {server = true},
+	func = function(name, param)
+		local param_name, points = param:match("^(%S+)%s+(%d+)$")
+		if param_name and points then
+			local tree_points = tonumber(points) or 0
+			local sapl_points = math.floor(tree_points / 6)
+			local player = minetest.get_player_by_name(param_name)
+			if player then
+				local meta = player:get_meta()
+				meta:set_int("lumberjack_tree_points", tree_points)
+				meta:set_int("lumberjack_sapl_points", sapl_points)
+				meta:set_string("is_lumberjack", "")
+				return true, "Player " .. param_name .. " now has " .. tree_points .. " tree and " .. sapl_points .. " sapling points."
+			end
+			return true, "Player " .. param_name .. "is unknown!"
+		end
+		return false
+	end
+})
+
+	
 lumberjack.register_tree("default:tree", "default:sapling", 1, 2)
 lumberjack.register_tree("default:jungletree", "default:junglesapling", 1, 5)
 lumberjack.register_tree("default:acacia_tree", "default:acacia_sapling", 2, 3)
