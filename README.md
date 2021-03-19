@@ -2,13 +2,13 @@
 
 A Mod for tree harvesting and planting!
 
-This mod fulfills several aspects:
+This mod fulfils several aspects:
 
 - New players are trained to always fell trees completely and replace them with
   saplings (education for sustainability)
 - Trained players get lumberjack "skills" to fell trees more efficiently
   (based on ideas from TreeCapitator and several Timber mods)
-- No parts of trees hanging in the air anymore
+- No parts of trees hanging in the air any more
   
 
 This mod allows to completely fell trees by destroying only one block.
