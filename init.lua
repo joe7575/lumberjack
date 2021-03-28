@@ -41,7 +41,8 @@ local function chopper_tool(digger)
 		if tool then
 			local caps = tool:get_tool_capabilities()
 			if caps.groupcaps and caps.groupcaps.choppy and caps.groupcaps.choppy.maxlevel then
-				return caps.groupcaps.choppy.maxlevel < 3
+				-- diamond axe returns 3
+				return caps.groupcaps.choppy.maxlevel <= 3
 			end
 		end 
 	end
@@ -125,6 +126,11 @@ end
 
 local function get_points(player)
 	if player and player.is_player and player:is_player() then
+		-- Test if we got an automatised tool like nodebreaker from pipeworks
+		-- always allow lumberjack point with this workaroud
+		if not player.get_meta then
+			return -1,-1
+		end
 		local meta = player:get_meta()
 		
 		if not meta:contains("lumberjack_tree_points") then
@@ -163,7 +169,7 @@ end
 --
 local function after_dig_tree(digger)
 	local tree_points, sapl_points = get_points(digger)
-	if tree_points then
+	if tree_points and digger.get_meta then
 		tree_points = tree_points - 1
 		local meta = digger:get_meta()
 		meta:set_int("lumberjack_tree_points", tree_points)
@@ -177,7 +183,7 @@ end
 --
 local function after_place_sapling(pos, placer)
 	local tree_points, sapl_points = get_points(placer)
-	if sapl_points then
+	if sapl_points and placer.get_meta then
 		sapl_points = sapl_points - 1
 		local meta = placer:get_meta()
 		meta:set_int("lumberjack_sapl_points", sapl_points)
