@@ -429,3 +429,25 @@ if minetest.get_modpath("moretrees") and minetest.global_exists("moretrees") the
 --	lumberjack.register_tree("moretrees:jungletree_trunk", "moretrees:jungletree_sapling", 1, 5) -- crashes
 	lumberjack.register_tree("moretrees:fir_trunk", "moretrees:fir_sapling", 5, 3) -- below leaves by 5
 end
+
+if minetest.register_on_mods_loaded ~= nil then
+	minetest.register_on_mods_loaded(function()
+    	for regnodename,v in pairs(minetest.registered_nodes) do
+			if string.find(regnodename, ":sapling") then
+				-- print ("sapling:"..regnodename)
+				local treename = string.sub(regnodename, 0, string.len(regnodename) - string.len(":sapling"))
+				if treename ~= nil then
+					treename = treename..":trunk"
+					-- print ("search:"..treename)
+					if (minetest.registered_nodes[treename]) ~= nil then
+						-- print ("tree:"..treename)
+						if lTrees[treename] == nil then
+							-- print ("lumberjack.register_tree:"..treename)
+							lumberjack.register_tree(treename, regnodename, 13, 2)
+						end
+					end
+				end
+			end
+		end
+	end)
+end
