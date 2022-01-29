@@ -1,2 +1,0 @@
-This mod allows to dig the bottom of the tree and the whole tree is moved into the inventory.
-

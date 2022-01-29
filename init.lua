@@ -406,12 +406,13 @@ minetest.register_chatcommand("set_lumberjack_points", {
 	end
 })
 
-	
-lumberjack.register_tree("default:tree", "default:sapling", 1, 2)
-lumberjack.register_tree("default:jungletree", "default:junglesapling", 1, 5)
-lumberjack.register_tree("default:acacia_tree", "default:acacia_sapling", 2, 3)
-lumberjack.register_tree("default:aspen_tree", "default:aspen_sapling", 0, 5)
-lumberjack.register_tree("default:pine_tree", "default:pine_sapling", 0, 3)
+if  minetest.global_exists("default") then
+	lumberjack.register_tree("default:tree", "default:sapling", 1, 2)
+	lumberjack.register_tree("default:jungletree", "default:junglesapling", 1, 5)
+	lumberjack.register_tree("default:acacia_tree", "default:acacia_sapling", 2, 3)
+	lumberjack.register_tree("default:aspen_tree", "default:aspen_sapling", 0, 5)
+	lumberjack.register_tree("default:pine_tree", "default:pine_sapling", 0, 3)
+end
 
 if minetest.get_modpath("ethereal") and minetest.global_exists("ethereal") then 
 	lumberjack.register_tree("ethereal:palm_trunk", "ethereal:palm_sapling", 1, 3)

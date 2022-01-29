@@ -1,6 +1,7 @@
 # Lumberjack
 
 A Mod for tree harvesting and planting!
+Chop down the entire tree by removing the bottom piece of the tree trunk.
 
 This mod fulfils several aspects:
 
