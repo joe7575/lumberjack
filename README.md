@@ -1,6 +1,6 @@
 # Lumberjack
 
-A Mod for tree harvesting and planting!
+A Mod for tree harvesting and planting!  
 Chop down the entire tree by removing the bottom piece of the tree trunk.
 
 This mod fulfils several aspects:
@@ -48,11 +48,10 @@ Some technical aspects:
   or other objects based on tree blocks
 - an API function allows to register additional trees from other mods,
   which is quite simple
-- the Ethereal mod is already supported, others will follow
 
 
 ## Dependencies
-default
+optional: moretrees, ethereal, default
 
 # License
 Copyright (C) 2018-2022 Joachim Stolberg
@@ -69,5 +68,5 @@ v0.5 - 17/Apr/2018 - protection bug fixed, further improvements
 v0.6 - 07/Jan/2020 - screwdriver bugfix  
 v0.7 - 27/May/2020 - ethereal bugfix  
 v0.8 - 29/Jul/2020 - fake player bugfix  
-v1.0 - 19/Mar/2021 - remove the lumberjack privs due to minetest engine issues
-v1.1 - 29/Jan/2022 - Add DE translation and "drop item" option
+v1.0 - 19/Mar/2021 - remove the lumberjack privs due to minetest engine issues  
+v1.1 - 29/Jan/2022 - Add DE translation and "drop item" option  
