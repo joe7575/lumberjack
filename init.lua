@@ -3,14 +3,14 @@
 	lumberjack
 	==========
 
-	Copyright (C) 2018-2021 Joachim Stolberg
+	Copyright (C) 2018-2022 Joachim Stolberg
 
 	LGPLv2.1+
 	See LICENSE.txt for more information
 
 	Mod to completely cut trees by destroying only one block.
-	This mod allows to destroy the bottom of the tree and the whole tree is felled
-	and moved to the players inventory.
+	This mod allows to destroy the root block of the tree and the whole tree is felled and 
+	alternatively moved to the player's inventory or dropped.
 	
 	To distinguish between "grown" trees and placed tree nodes, the attribute 
 	'node.param1' is used to identify placed nodes.
@@ -23,12 +23,14 @@ lumberjack = {}
 
 -- Test MT 5.4 new string mode
 local CLIP = minetest.features.use_texture_alpha_string_modes and "clip" or true
+local S = minetest.get_translator("lumberjack")
 
 local MY_PARAM1_VAL = 7  -- to identify placed nodes
 
 -- Necessary number of points for dug trees and placed sapling to get lumberjack privs
 local LUMBERJACK_TREE_POINTS = tonumber(minetest.settings:get("lumberjack_points")) or 400
 local LUMBERJACK_SAPL_POINTS = math.floor(LUMBERJACK_TREE_POINTS / 6)
+local DROP_ITEMS = minetest.settings:get_bool("lumberjack_drop_tree_items") == true
 
 local lTrees = {} -- List of registered tree items
 
@@ -102,6 +104,9 @@ local function remove_items(pos1, pos2, name)
 	for _,pos in ipairs(minetest.find_nodes_in_area(pos1, pos2, name)) do
 		minetest.remove_node(pos)
 		remove_steps(pos)
+		if DROP_ITEMS then
+			minetest.add_item(pos, ItemStack(name))
+		end
 		cnt = cnt + 1
 	end
 	return cnt
@@ -157,8 +162,8 @@ local function is_lumberjack(player, tree_points, sapl_points)
 		if not meta:contains("is_lumberjack") then
 			meta:set_int("is_lumberjack", 1)
 			local player_name = player:get_player_name()
-			minetest.chat_send_player(player_name, "You're a real lumberjack now!")
-			minetest.log("action", player_name.." got lumberjack privs")
+			minetest.chat_send_player(player_name, S("You're a real lumberjack now!"))
+			minetest.log("action", player_name .. " got lumberjack privs")
 		end
 	end
 	return true
@@ -214,12 +219,14 @@ end
 -- Add tree items to the players inventory
 --
 local function add_to_inventory(digger, name, len, pos)
-	local inv = digger:get_inventory()
-	local items = ItemStack(name .. " " .. len)
-	if inv and items and inv:room_for_item("main", items) then
-		inv:add_item("main", items)
-	else
-		minetest.item_drop(items, digger, pos)
+	if not DROP_ITEMS then
+		local inv = digger:get_inventory()
+		local items = ItemStack(name .. " " .. len)
+		if inv and items and inv:room_for_item("main", items) then
+			inv:add_item("main", items)
+		else
+			minetest.item_drop(items, digger, pos)
+		end
 	end
 end	
 
@@ -276,6 +283,9 @@ local function can_dig(pos, digger)
 	if is_lumberjack(digger, tree_points, sapl_points) then
 		if chopper_tool(digger) then
 			return true
+		else
+			minetest.chat_send_player(name, S("[Lumberjack Mod] You are using the wrong tool"))
+			return false
 		end
 	end
 	local node = minetest.get_node(pos)
@@ -285,7 +295,7 @@ local function can_dig(pos, digger)
 	if is_top_tree_node(pos, node.name) then
 		return true
 	end
-	minetest.chat_send_player(name, "[Lumberjack Mod] From the top, please")
+	minetest.chat_send_player(name, S("[Lumberjack Mod] From the top, please"))
 	return false
 end
 
@@ -316,8 +326,8 @@ minetest.register_node("lumberjack:step", {
 -- Register the tree node to the lumberjack mod.
 -- 'tree_name' is the tree item name,, e.g. "default:tree"
 -- 'sapling_name' is the tree sapling name, e.g. "default:sapling"
--- 'radius' the the range in nodes (+x/-x/+z/-z), where all available tree nodes will be removed.
--- 'stem_height_min' is the minimum number of tree nodes, to be a valid stem (and not the a root item).
+-- 'radius' is the range in nodes (+x/-x/+z/-z), where all available tree nodes will be removed.
+-- 'stem_height_min' is the minimum number of tree nodes, to be a valid stem (and not a root item).
 --
 function lumberjack.register_tree(tree_name, sapling_name, radius, stem_height_min)
 	
@@ -358,24 +368,24 @@ function lumberjack.register_tree(tree_name, sapling_name, radius, stem_height_m
 end
 
 minetest.register_chatcommand("lumberjack", {
-	description = "Output your lumberjack points",
+	description = S("Output your lumberjack points"),
 	func = function(name, param)
 		local tree_points, sapl_points = get_points(minetest.get_player_by_name(name))
 		if tree_points > 0 and sapl_points > 0 then
-			return true, "You need further " .. tree_points .. " tree " .. " and " .. sapl_points .. " sapling points."
+			return true, S("You need further @1 tree and @2 sapling points.", tree_points, sapl_points)
 		elseif tree_points > 0 then
-			return true, "You need further " .. tree_points .. " tree points."
+			return true, S("You need further @1 tree points.", tree_points)
 		elseif sapl_points > 0 then
-			return true, "You need further " .. sapl_points .. " sapling points."
+			return true, S("You need further @1 sapling points.", sapl_points)
 		else
-			return true, "You are already a lumberjack."
+			return true, S("You are already a lumberjack.")
 		end
 	end
 })
 
 minetest.register_chatcommand("set_lumberjack_points", {
 	params = "<name> <tree-points>",
-	description = "Give a player lumberjack points",
+	description = S("Give a player lumberjack points"),
 	privs = {server = true},
 	func = function(name, param)
 		local param_name, points = param:match("^(%S+)%s+(%d+)$")
@@ -388,9 +398,9 @@ minetest.register_chatcommand("set_lumberjack_points", {
 				meta:set_int("lumberjack_tree_points", tree_points)
 				meta:set_int("lumberjack_sapl_points", sapl_points)
 				meta:set_string("is_lumberjack", "")
-				return true, "Player " .. param_name .. " now has " .. tree_points .. " tree and " .. sapl_points .. " sapling points."
+				return true, S("Player @1 now has @2 tree and @3 sapling points.", param_name, tree_points, sapl_points)
 			end
-			return true, "Player " .. param_name .. "is unknown!"
+			return true, S("Player @1 is unknown!", param_name)
 		end
 		return false
 	end

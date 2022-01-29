@@ -12,8 +12,10 @@ This mod fulfils several aspects:
   
 
 This mod allows to completely fell trees by destroying only one block.
-The whole tree is harvested and moved to the players inventory.
-But therefore some lumberjack skills are needed. New player normally will
+The whole tree is harvested and moved to the player's inventory or
+alternatively, the tree trunk items are dropped. See 'settingtypes.txt'
+for configuration options.
+But therefore, some lumberjack skills are needed. New player normally will
 not get the necessary skills immediately, they have to harvest the tree from
 the top, block by block "to improve their skills".
 
@@ -52,7 +54,7 @@ Some technical aspects:
 default
 
 # License
-Copyright (C) 2018-2021 Joachim Stolberg
+Copyright (C) 2018-2022 Joachim Stolberg
 Code: Licensed under the GNU LGPL version 2.1 or later.
 See LICENSE.txt and http://www.gnu.org/licenses/lgpl-2.1.txt
 Sound is taken from Hybrid Dog (TreeCapitator)
@@ -67,3 +69,4 @@ v0.6 - 07/Jan/2020 - screwdriver bugfix
 v0.7 - 27/May/2020 - ethereal bugfix  
 v0.8 - 29/Jul/2020 - fake player bugfix  
 v1.0 - 19/Mar/2021 - remove the lumberjack privs due to minetest engine issues
+v1.1 - 29/Jan/2022 - Add DE translation and "drop item" option
