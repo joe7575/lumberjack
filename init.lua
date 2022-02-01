@@ -90,6 +90,9 @@ local function add_wear(digger, node, num_nodes)
 		if caps.groupcaps and caps.groupcaps.choppy then 
 			local uses = caps.groupcaps.choppy.uses or 10
 			uses = uses * 9
+			if  minetest.global_exists("toolranks") then
+				toolranks.new_afteruse(tool, digger, node, {wear = uses})
+			end
 			tool:add_wear(65535 * num_nodes / uses)
 			digger:set_wielded_item(tool)
 		end
@@ -279,6 +282,10 @@ local function can_dig(pos, digger)
 	if minetest.is_protected(pos, name) then
 		return false
 	end
+	local node = minetest.get_node(pos)
+	if node.param1 ~= 0 then 
+		return true
+	end
 	local tree_points, sapl_points = get_points(digger)
 	if is_lumberjack(digger, tree_points, sapl_points) then
 		if chopper_tool(digger) then
@@ -287,10 +294,6 @@ local function can_dig(pos, digger)
 			minetest.chat_send_player(name, S("[Lumberjack Mod] You are using the wrong tool"))
 			return false
 		end
-	end
-	local node = minetest.get_node(pos)
-	if node.param1 ~= 0 then 
-		return true
 	end
 	if is_top_tree_node(pos, node.name) then
 		return true
