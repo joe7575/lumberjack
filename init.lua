@@ -283,6 +283,10 @@ local function can_dig(pos, digger)
 	if is_lumberjack(digger, tree_points, sapl_points) then
 		if chopper_tool(digger) then
 			return true
+		-- Screwdriver
+		elseif node.param1 ~= 0 and
+			digger:get_wielded_item():get_name() == "screwdriver:screwdriver"
+			then return true
 		else
 			minetest.chat_send_player(name, S("[Lumberjack Mod] You are using the wrong tool"))
 			return false
