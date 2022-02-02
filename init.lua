@@ -91,6 +91,9 @@ local function add_wear(digger, node, num_nodes)
 			local uses = caps.groupcaps.choppy.uses or 10
 			uses = uses * 9
 			if  minetest.global_exists("toolranks") then
+				local itemmeta = tool:get_meta()
+				local dugnodes = tonumber(itemmeta:get_string("dug")) or 0
+				itemmeta:set_string("dug", dugnodes + num_nodes - 1)
 				toolranks.new_afteruse(tool, digger, node, {wear = uses})
 			end
 			tool:add_wear(65535 * num_nodes / uses)
