@@ -22,7 +22,7 @@
 lumberjack = {}
 
 -- Test MT 5.4 new string mode
-local CLIP = minetest.features.use_texture_alpha_string_modes and "clip" or true
+local CLIP = minetest.features.use_texture_alpha_string_modes and "blend" or true
 local S = minetest.get_translator("lumberjack")
 
 local MY_PARAM1_VAL = 7  -- to identify placed nodes
