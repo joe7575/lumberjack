@@ -50,6 +50,24 @@ Some technical aspects:
   which is quite simple
 
 
+## Getting started
+
+To fell a complete tree you need two things:
+
+1. an axe (a tool with `choppy` support), and
+2. the lumberjack skill (unless `lumberjack_points` is set to `0`,
+   which grants the skill to every player from the start).
+
+In a new world with an empty inventory you have neither. In this case, add
+some starting items to your `minetest.conf`, for example:
+
+    initial_stuff = default:axe_steel,default:torch 20,default:tree 20,default:sapling 10
+
+Note: `lumberjack_points = 0` only grants the skill, it does not give you a
+tool. Alternatively, with `server` privileges the skill can be granted with
+`/set_lumberjack_points <name> 0`.
+
+
 ## Dependencies
 optional: moretrees, ethereal, default
 

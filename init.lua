@@ -281,6 +281,9 @@ local function can_dig(pos, digger)
 	if not digger then
 		return true
 	end
+	if not digger.is_player or not digger:is_player() then
+		return true
+	end
 	local name = digger:get_player_name()
 	if minetest.is_protected(pos, name) then
 		return false
